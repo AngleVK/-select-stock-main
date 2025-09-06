@@ -105,12 +105,17 @@ def main():
         logger.error("未能加载任何行情数据")
         sys.exit(1)
 
-    # 统一所有 DataFrame 的 date 列类型
+   # 统一所有 DataFrame 的 date 列类型
     for df in data.values():
-        df['date'] = pd.to_datetime(df['date'], errors="coerce")
+        # 检查格式
+        print(df['date'].unique())
+        # 或指定格式
+        df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d', errors='coerce')
+        # 检查哪些解析失败
+        print(df[df['date'].isna()])
     #提示数据异常
-        if df['date'].isna().any():
-        logger.warning("代码 %s 的 date 列存在异常，将被忽略", code)
+    if df['date'].isna().any():
+            logger.warning("代码 %s 的 date 列存在异常，将被忽略", code)
     # 判断 args.date 是否有值
     if args.date:
         trade_date = pd.to_datetime(args.date)
@@ -118,6 +123,7 @@ def main():
         trade_date = max(df["date"].max() for df in data.values())
     if not args.date:
         logger.info("未指定 --date，使用最近日期 %s", trade_date.date())
+
 
     # --- 加载 Selector 配置 ---
     selector_cfgs = load_config(Path(args.config))
@@ -144,3 +150,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
